@@ -32,6 +32,20 @@ const sum3 = (n: number, n1: number): number => {
 };
 console.log(sum3(4, 10)); //49
 export default function Home() {
+  const hundleclick = (x: number, y: number) => {};
+  const [board, setboard] = useState([
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  ]); //初級,9×9,ボム10
+  // 0:透明, 1:旗, 2:はてな,の予定
+
   const [samplePoints, setSamplePoints] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   console.log(samplePoints);
   const [sampleCounter, setSampleCounter] = useState(0);
@@ -46,10 +60,22 @@ export default function Home() {
   console.log(totalPoint);
   return (
     <div className={styles.container}>
-      <div
-        className={styles.sampleCell}
-        style={{ backgroundPosition: `${-30 * sampleCounter}px` }}
-      />
+      <div className={styles.board}>
+        {board.map((row, y) =>
+          row.map((color, x) => (
+            <div
+              className={styles.block}
+              key={`${x}-${y}`}
+              onClick={() => hundleclick(x, y)}
+              style={{ backgroundPosition: `${-30 * sampleCounter}px` }}
+            />
+          )),
+        )}
+        <div
+          className={styles.sampleCell}
+          style={{ backgroundPosition: `${-30 * sampleCounter}px` }}
+        />
+      </div>
       <button onClick={clickHandler}>クリック</button>
     </div>
   );

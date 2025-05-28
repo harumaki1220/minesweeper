@@ -8,6 +8,33 @@
   padding: 0 0.5rem;
 }
 
+.board {
+  display: flex;
+  flex-flow: row wrap;
+  width: 270px;
+  height: 270px;
+  background-color: gray;
+}
+
+.block {
+  width: 30px;
+  height: 30px;
+  padding: 10px;
+  background: #c6c6c6 url('~/src/assets/images/icons.png') no-repeat;
+  border: 4px solid;
+  border-color: #fff #808080 #808080 #fff;
+}
+
+.undercell {
+  width: 30px;
+  height: 30px;
+}
+
+.covercell {
+  width: 30px;
+  height: 30px;
+}
+
 .sampleCell {
   width: 30px;
   height: 30px;
