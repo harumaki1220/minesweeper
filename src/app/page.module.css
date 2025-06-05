@@ -29,6 +29,7 @@
   width: 30px;
   height: 30px;
   background: url('~/src/assets/images/icons.png') no-repeat;
+  border: 1px solid black;
 }
 
 .sampleCell {
