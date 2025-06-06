@@ -2,10 +2,32 @@
 
 import { useState } from 'react';
 import styles from './page.module.css';
-let count = 0;
+let first = 0;
+
+const directions = [
+  [-1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+  [1, 0],
+  [1, -1],
+  [0, -1],
+  [-1, -1],
+];
+
 // ユーザーの操作、爆弾の位置
 // userInputs,bombMap,
-const calcBoard = (userInputs: number[][], bombMap: number[][]) => {};
+const calc = (userInputs: number[][], bombMap: number[][]) => {
+  const newcalc = structuredClone(bombMap);
+  for (let y = 0; y < 9; y++) {
+    for (let x = 0; x < 9; x++) {
+      newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
+    }
+  }
+  return newcalc;
+};
+
+const bomcalc = (userInputs: number[][], bombMap: number[][]) => {};
 
 export default function Home() {
   const [bombMap, setbombMap] = useState([
@@ -34,6 +56,17 @@ export default function Home() {
   ]); //初級,9×9,ボム10
   // 0:透明, 1:開ける, 2:旗, 3:はてな,の予定
 
+  const directions = [
+    [-1, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [1, -1],
+    [0, -1],
+    [-1, -1],
+  ];
+
   const leftclick = (x: number, y: number) => {
     let rx = 0;
     let ry = 0;
@@ -43,13 +76,14 @@ export default function Home() {
     const newuserInputs = structuredClone(userInputs);
     if (newuserInputs[y][x] === 0) {
       newuserInputs[y][x] = 1;
-      count += 1;
+      first += 1;
     }
-    if (count === 1) {
+    // 一回目の左クリックで爆弾配置
+    if (first === 1) {
       while (bombcount < 11) {
         rx = Math.floor(Math.random() * 9);
         ry = Math.floor(Math.random() * 9);
-        console.log(bombcount);
+        // 初級9x9の盤面に爆弾をランダム配置
         if (newbombMap[ry][rx] === 0) {
           newbombMap[ry][rx] = 1;
           bombcount += 1;
@@ -79,12 +113,7 @@ export default function Home() {
     setuserInputs(newuserInputs);
   };
 
-  const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
-    const newBoard = Array.from({ length: userInputs.length }, () =>
-      Array.from({ length: userInputs[0].length }, () => 0),
-    );
-  };
-  const board = calcBoard(userInputs, bombMap);
+  const board = calc(userInputs, bombMap);
 
   return (
     <div className={styles.container}>
@@ -103,7 +132,7 @@ export default function Home() {
             />
           )),
         )}
-        {bombMap.map((row, y) =>
+        {board.map((row, y) =>
           row.map((value, x) => (
             <div
               className={styles.undercell}
