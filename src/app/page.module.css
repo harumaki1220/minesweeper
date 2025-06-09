@@ -32,9 +32,16 @@
   border: 1px solid black;
 }
 
+.time {
+  width: 30px;
+  height: 30px;
+}
+
 .sampleCell {
   width: 30px;
   height: 30px;
   background: url('~/src/assets/images/icons.png') no-repeat;
   border: 1px solid black;
 }
+
+/* デジタル表示風フォント */

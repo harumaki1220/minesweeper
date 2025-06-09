@@ -1,6 +1,5 @@
 'use client';
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './page.module.css';
 let first = 0;
 
@@ -21,13 +20,52 @@ const calc = (userInputs: number[][], bombMap: number[][]) => {
   const newcalc = structuredClone(bombMap);
   for (let y = 0; y < 9; y++) {
     for (let x = 0; x < 9; x++) {
+      if (userInputs[y][x] === 2 || userInputs[y][x] === 3) {
+        newcalc[y][x] = userInputs[y][x];
+        continue;
+      }
+      if (newcalc[y][x] === userInputs[y][x]) {
+        continue;
+      }
       newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
     }
   }
   return newcalc;
 };
 
-const bomcalc = (userInputs: number[][], bombMap: number[][]) => {};
+const bomcalc = (userInputs: number[][], bombMap: number[][]) => {
+  const newcalc = structuredClone(bombMap);
+  for (let y = 0; y < 9; y++) {
+    for (let x = 0; x < 9; x++) {
+      newcalc[y][x] = bombMap[y][x] + userInputs[y][x];
+    }
+  }
+};
+
+const bom = (b: number[][]) => {
+  const newbom = structuredClone(b);
+  for (let y = 0; y < 9; y++) {
+    for (let x = 0; x < 9; x++) {
+      let notice = 0;
+      if (newbom[y][x] !== 1) {
+        for (const [dy, dx] of directions) {
+          if (newbom[y + dy] !== undefined) {
+            if (newbom[y + dy][x + dx] === 1) {
+              notice += 1;
+            }
+          }
+        }
+        // if (notice !== 0) {}
+      }
+    }
+  }
+};
+
+// 再起関数
+// for (let y = 0; y < 9; y++) {
+//   for (let x = 0; x < 9; x++) {
+//   }
+// }
 
 export default function Home() {
   const [bombMap, setbombMap] = useState([
@@ -54,7 +92,7 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
   ]); //初級,9×9,ボム10
-  // 0:透明, 1:開ける, 2:旗, 3:はてな,の予定
+  // 0:透明, 10:開ける, 2:旗, 3:はてな,の予定(calcの影響により一旦1 => 10に変更)
 
   const directions = [
     [-1, 0],
@@ -67,6 +105,13 @@ export default function Home() {
     [-1, -1],
   ];
 
+  type CountMap = Record<number, number>;
+  const flat = bombMap.flat();
+  const counts = flat.reduce<CountMap>((acc, cur) => {
+    acc[cur] = (acc[cur] || 0) + 1;
+    return acc;
+  }, {} as CountMap);
+
   const leftclick = (x: number, y: number) => {
     let rx = 0;
     let ry = 0;
@@ -75,7 +120,7 @@ export default function Home() {
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
     if (newuserInputs[y][x] === 0) {
-      newuserInputs[y][x] = 1;
+      newuserInputs[y][x] = 10;
       first += 1;
     }
     // 一回目の左クリックで爆弾配置
@@ -89,7 +134,6 @@ export default function Home() {
           bombcount += 1;
         }
         if (bombcount === 10) {
-          console.log(newbombMap);
           setbombMap(newbombMap);
           break;
         }
@@ -115,19 +159,35 @@ export default function Home() {
 
   const board = calc(userInputs, bombMap);
 
+  const [count, setCount] = useState(0);
+  function App() {
+    useEffect(() => {
+      const timerId = setInterval(() => {
+        setCount((prevCount) => prevCount + 1);
+      }, 1000);
+
+      return () => {
+        clearInterval(timerId);
+      };
+    }, []);
+  }
+
   return (
     <div className={styles.container}>
+      <div>
+        <p>{count}</p>
+      </div>
       <div className={styles.board}>
         {userInputs.map((row, y) =>
           row.map((value, x) => (
-            <div
+            <button
               className={styles.block}
               key={`${x}-${y}`}
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
                 backgroundPosition: `${value === 2 ? -270 : value === 3 ? -240 : 30}px`,
-                opacity: value === 1 ? 0 : 1,
+                opacity: value === 10 ? 0 : 1,
               }}
             />
           )),
@@ -150,5 +210,3 @@ export default function Home() {
     </div>
   );
 }
-
-// 再起関数
