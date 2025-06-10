@@ -32,9 +32,12 @@
   border: 1px solid black;
 }
 
-.time {
-  width: 30px;
-  height: 30px;
+.clock {
+  font-family: 'Share Tech Mono', monospace;
+  color: #f00;
+  text-align: center;
+  text-shadow: 0 0 20px #0aafe6;
+  background-color: #000;
 }
 
 .sampleCell {

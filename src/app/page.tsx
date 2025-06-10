@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import styles from './page.module.css';
-let first = 0;
 
 const directions = [
   [-1, 0],
@@ -14,51 +13,34 @@ const directions = [
   [-1, -1],
 ];
 
-// ユーザーの操作、爆弾の位置
-// userInputs,bombMap,
-const calc = (userInputs: number[][], bombMap: number[][]) => {
-  const newcalc = structuredClone(bombMap);
-  for (let y = 0; y < 9; y++) {
-    for (let x = 0; x < 9; x++) {
-      if (userInputs[y][x] === 2 || userInputs[y][x] === 3) {
-        newcalc[y][x] = userInputs[y][x];
-        continue;
+const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
+  const board = Array.from({ length: userInputs.length }, () =>
+    Array.from({ length: userInputs[0].length }, () => 0),
+  );
+  const bombExplosion: [number, number][] = [];
+  let booomb = false;
+  const clickBomb: [number, number][] = [];
+  for (let y = 0; y < userInputs.length; y++) {
+    for (let x = 0; x < userInputs[0].length; x++) {
+      if (bombMap[y][x] === 1) {
+        bombExplosion.push([x, y]);
       }
-      if (newcalc[y][x] === userInputs[y][x]) {
-        continue;
-      }
-      newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
-    }
-  }
-  return newcalc;
-};
-
-const bomcalc = (userInputs: number[][], bombMap: number[][]) => {
-  const newcalc = structuredClone(bombMap);
-  for (let y = 0; y < 9; y++) {
-    for (let x = 0; x < 9; x++) {
-      newcalc[y][x] = bombMap[y][x] + userInputs[y][x];
-    }
-  }
-};
-
-const bom = (b: number[][]) => {
-  const newbom = structuredClone(b);
-  for (let y = 0; y < 9; y++) {
-    for (let x = 0; x < 9; x++) {
-      let notice = 0;
-      if (newbom[y][x] !== 1) {
-        for (const [dy, dx] of directions) {
-          if (newbom[y + dy] !== undefined) {
-            if (newbom[y + dy][x + dx] === 1) {
-              notice += 1;
-            }
-          }
+      if (userInputs[y][x] === -1) {
+        if (bombMap[y][x] === 1) {
+          booomb = true;
+          clickBomb.push([x, y]);
         }
-        // if (notice !== 0) {}
+        if (board[y][x] === 0) {
+          const zero: [number, number][] = [];
+        }
       }
     }
   }
+};
+
+const aroundBomCheck = (x: number, y: number, currentbombMap: number[][]) => {
+  const height = currentbombMap.length;
+  const width = currentbombMap[0].length;
 };
 
 // 再起関数
@@ -92,7 +74,7 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
   ]); //初級,9×9,ボム10
-  // 0:透明, 10:開ける, 2:旗, 3:はてな,の予定(calcの影響により一旦1 => 10に変更)
+  // 0:透明, -1:開ける, 1:旗, 2:はてな,の予定(calcの影響により一旦1 => 10に変更)
 
   const directions = [
     [-1, 0],
@@ -105,39 +87,38 @@ export default function Home() {
     [-1, -1],
   ];
 
-  type CountMap = Record<number, number>;
-  const flat = bombMap.flat();
-  const counts = flat.reduce<CountMap>((acc, cur) => {
-    acc[cur] = (acc[cur] || 0) + 1;
-    return acc;
-  }, {} as CountMap);
+  // type CountMap = Record<number, number>;
+  // const flat = bombMap.flat();
+  // const counts = flat.reduce<CountMap>((acc, cur) => {
+  //   acc[cur] = (acc[cur] || 0) + 1;
+  //   return acc;
+  // }, {} as CountMap);
 
   const leftclick = (x: number, y: number) => {
-    let rx = 0;
-    let ry = 0;
-    let bombcount = 0;
     const newbombMap = structuredClone(bombMap);
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
     if (newuserInputs[y][x] === 0) {
-      newuserInputs[y][x] = 10;
-      first += 1;
+      newuserInputs[y][x] = -1;
     }
+    console.log(newuserInputs);
+
+    let currentbombMap = bombMap;
+    const first = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
-    if (first === 1) {
-      while (bombcount < 11) {
-        rx = Math.floor(Math.random() * 9);
-        ry = Math.floor(Math.random() * 9);
+    if (first) {
+      let bombcount = 10;
+      while (bombcount > 0) {
+        const rx = Math.floor(Math.random() * 9);
+        const ry = Math.floor(Math.random() * 9);
         // 初級9x9の盤面に爆弾をランダム配置
-        if (newbombMap[ry][rx] === 0) {
+        if (newbombMap[ry][rx] === 0 && (ry !== y || rx !== x)) {
           newbombMap[ry][rx] = 1;
-          bombcount += 1;
-        }
-        if (bombcount === 10) {
-          setbombMap(newbombMap);
-          break;
+          bombcount--;
         }
       }
+      setbombMap(newbombMap);
+      currentbombMap = newbombMap;
     }
 
     setuserInputs(newuserInputs);
@@ -147,27 +128,24 @@ export default function Home() {
     event?.preventDefault();
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
-    if (newuserInputs[y][x] === 0) {
-      newuserInputs[y][x] = 2;
-    } else if (newuserInputs[y][x] === 2) {
-      newuserInputs[y][x] = 3;
-    } else if (newuserInputs[y][x] === 3) {
-      newuserInputs[y][x] = 0;
-    }
+    if (newuserInputs[y][x] !== 0) newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
     setuserInputs(newuserInputs);
   };
 
-  const board = calc(userInputs, bombMap);
+  const board = calcBoard(userInputs, bombMap);
 
+  // タイマー
   const [count, setCount] = useState(0);
   function App() {
     useEffect(() => {
-      const timerId = setInterval(() => {
+      const intervalId = setInterval(() => {
         setCount((prevCount) => prevCount + 1);
       }, 1000);
 
       return () => {
-        clearInterval(timerId);
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
       };
     }, []);
   }
@@ -186,13 +164,13 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                backgroundPosition: `${value === 2 ? -270 : value === 3 ? -240 : 30}px`,
-                opacity: value === 10 ? 0 : 1,
+                backgroundPosition: `${value === 1 ? -270 : value === 2 ? -240 : 30}px`,
+                opacity: value === -1 ? 0 : 1,
               }}
             />
           )),
         )}
-        {board.map((row, y) =>
+        {bombMap.map((row, y) =>
           row.map((value, x) => (
             <div
               className={styles.undercell}
