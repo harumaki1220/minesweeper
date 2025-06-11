@@ -38,9 +38,25 @@ const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
   }
 };
 
-const aroundBomCheck = (x: number, y: number, currentbombMap: number[][]) => {
-  const height = currentbombMap.length;
-  const width = currentbombMap[0].length;
+const aroundBomCheck = (x: number, y: number, newbombMap: number[][]) => {
+  let numbom = 0;
+  // const height = newbombMap.length;
+  // const width = newbombMap[0].length;
+  for (let y = 0; y < 9; y++) {
+    for (let x = 0; x < 9; x++) {
+      if (newbombMap[y][x] !== 1) {
+        for (const [dx, dy] of directions) {
+          if (newbombMap[y + dy] !== undefined) {
+            if (newbombMap[y + dy][x + dx] === 1) {
+              numbom++;
+            }
+          }
+        }
+        newbombMap[y][x] = numbom * 10;
+        numbom = 0;
+      }
+    }
+  }
 };
 
 // 再起関数
@@ -74,18 +90,7 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
   ]); //初級,9×9,ボム10
-  // 0:透明, -1:開ける, 1:旗, 2:はてな,の予定(calcの影響により一旦1 => 10に変更)
-
-  const directions = [
-    [-1, 0],
-    [-1, 1],
-    [0, 1],
-    [1, 1],
-    [1, 0],
-    [1, -1],
-    [0, -1],
-    [-1, -1],
-  ];
+  // 0:透明, -1:開ける, 1:旗, 2:はてな,
 
   // type CountMap = Record<number, number>;
   // const flat = bombMap.flat();
@@ -103,7 +108,7 @@ export default function Home() {
     }
     console.log(newuserInputs);
 
-    let currentbombMap = bombMap;
+    const currentbombMap = bombMap;
     const first = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
     if (first) {
@@ -117,8 +122,8 @@ export default function Home() {
           bombcount--;
         }
       }
+      aroundBomCheck(x, y, newbombMap);
       setbombMap(newbombMap);
-      currentbombMap = newbombMap;
     }
 
     setuserInputs(newuserInputs);
@@ -128,7 +133,8 @@ export default function Home() {
     event?.preventDefault();
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
-    if (newuserInputs[y][x] !== 0) newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
+    if (newuserInputs[y][x] === 0 || newuserInputs[y][x] === 1 || newuserInputs[y][x] === 2)
+      newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
     setuserInputs(newuserInputs);
   };
 
@@ -178,7 +184,7 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                backgroundPosition: `${value === 1 ? -300 : 30}px`,
+                backgroundPosition: `${value === 1 ? -300 : value === 10 ? 0 : value === 20 ? -30 : value === 30 ? -60 : value === 40 ? -90 : value === 50 ? -120 : value === 60 ? -150 : value === 70 ? -180 : value === 80 ? -210 : 30}px`,
               }}
             />
           )),
