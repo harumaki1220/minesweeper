@@ -14,45 +14,36 @@ const directions = [
 ];
 
 const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
-  const board = Array.from({ length: userInputs.length }, () =>
-    Array.from({ length: userInputs[0].length }, () => 0),
-  );
-  const bombExplosion: [number, number][] = [];
-  let booomb = false;
-  const clickBomb: [number, number][] = [];
-  for (let y = 0; y < userInputs.length; y++) {
-    for (let x = 0; x < userInputs[0].length; x++) {
-      if (bombMap[y][x] === 1) {
-        bombExplosion.push([x, y]);
+  const newcalc = structuredClone(bombMap);
+  const h = userInputs.length;
+  const w = userInputs[0].length;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (userInputs[y][x] === -1 || userInputs[y][x] === 2) {
+        continue;
       }
-      if (userInputs[y][x] === -1) {
-        if (bombMap[y][x] === 1) {
-          booomb = true;
-          clickBomb.push([x, y]);
-        }
-        if (board[y][x] === 0) {
-          const zero: [number, number][] = [];
-        }
-      }
+      newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
     }
   }
+  console.log(newcalc);
+  return newcalc;
 };
 
-const aroundBomCheck = (x: number, y: number, newbombMap: number[][]) => {
+const aroundBomCheck = (newbombMap: number[][]) => {
   let numbom = 0;
-  // const height = newbombMap.length;
-  // const width = newbombMap[0].length;
-  for (let y = 0; y < 9; y++) {
-    for (let x = 0; x < 9; x++) {
-      if (newbombMap[y][x] !== 1) {
+  const h = newbombMap.length;
+  const w = newbombMap[0].length;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (newbombMap[y][x] !== 10) {
         for (const [dx, dy] of directions) {
           if (newbombMap[y + dy] !== undefined) {
-            if (newbombMap[y + dy][x + dx] === 1) {
+            if (newbombMap[y + dy][x + dx] === 10) {
               numbom++;
             }
           }
         }
-        newbombMap[y][x] = numbom * 10;
+        newbombMap[y][x] = numbom * 100;
         numbom = 0;
       }
     }
@@ -77,7 +68,7 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
   ]);
-  //0:セーフ, 1:爆弾
+  //0:セーフ, 10:爆弾
 
   const [userInputs, setuserInputs] = useState([
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -89,15 +80,11 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-  ]); //初級,9×9,ボム10
+  ]); //初級,9×9,ボム10個
   // 0:透明, -1:開ける, 1:旗, 2:はてな,
 
-  // type CountMap = Record<number, number>;
-  // const flat = bombMap.flat();
-  // const counts = flat.reduce<CountMap>((acc, cur) => {
-  //   acc[cur] = (acc[cur] || 0) + 1;
-  //   return acc;
-  // }, {} as CountMap);
+  // タイマー
+  const [count, setCount] = useState(0);
 
   const leftclick = (x: number, y: number) => {
     const newbombMap = structuredClone(bombMap);
@@ -108,7 +95,6 @@ export default function Home() {
     }
     console.log(newuserInputs);
 
-    const currentbombMap = bombMap;
     const first = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
     if (first) {
@@ -118,11 +104,11 @@ export default function Home() {
         const ry = Math.floor(Math.random() * 9);
         // 初級9x9の盤面に爆弾をランダム配置
         if (newbombMap[ry][rx] === 0 && (ry !== y || rx !== x)) {
-          newbombMap[ry][rx] = 1;
+          newbombMap[ry][rx] = 10;
           bombcount--;
         }
       }
-      aroundBomCheck(x, y, newbombMap);
+      aroundBomCheck(newbombMap);
       setbombMap(newbombMap);
     }
 
@@ -140,8 +126,6 @@ export default function Home() {
 
   const board = calcBoard(userInputs, bombMap);
 
-  // タイマー
-  const [count, setCount] = useState(0);
   function App() {
     useEffect(() => {
       const intervalId = setInterval(() => {
@@ -176,7 +160,7 @@ export default function Home() {
             />
           )),
         )}
-        {bombMap.map((row, y) =>
+        {calcBoard(userInputs, bombMap).map((row, y) =>
           row.map((value, x) => (
             <div
               className={styles.undercell}
@@ -184,13 +168,12 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                backgroundPosition: `${value === 1 ? -300 : value === 10 ? 0 : value === 20 ? -30 : value === 30 ? -60 : value === 40 ? -90 : value === 50 ? -120 : value === 60 ? -150 : value === 70 ? -180 : value === 80 ? -210 : 30}px`,
+                backgroundPosition: `${value === 10 ? -300 : value === 100 ? 0 : value === 200 ? -30 : value === 300 ? -60 : value === 400 ? -90 : value === 500 ? -120 : value === 600 ? -150 : value === 700 ? -180 : value === 800 ? -210 : 30}px`,
               }}
             />
           )),
         )}
       </div>
-      {/* <button onClick={clickHandler}>クリック</button> */}
     </div>
   );
 }
