@@ -144,9 +144,7 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <div>
-        <p>{count}</p>
-      </div>
+      <div>{/* <p>{count}</p> */}</div>
       <div className={styles.board}>
         {calcBoard(userInputs, bombMap).map((row, y) =>
           row.map((value, x) => (
