@@ -86,7 +86,7 @@ export default function Home() {
   // 0:透明, -1:開ける, 1:旗, 2:はてな,
 
   // タイマー
-  const [count, setCount] = useState(0);
+  // const [count, setCount] = useState(0);
 
   const leftclick = (x: number, y: number) => {
     const newbombMap = structuredClone(bombMap);
