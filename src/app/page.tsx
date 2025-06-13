@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styles from './page.module.css';
 
 const directions = [
@@ -128,19 +128,19 @@ export default function Home() {
 
   // const board = calcBoard(userInputs, bombMap);
 
-  function App() {
-    useEffect(() => {
-      const intervalId = setInterval(() => {
-        setCount((prevCount) => prevCount + 1);
-      }, 1000);
+  // function App() {
+  //   useEffect(() => {
+  //     const intervalId = setInterval(() => {
+  //       setCount((prevCount) => prevCount + 1);
+  //     }, 1000);
 
-      return () => {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
-      };
-    }, []);
-  }
+  //     return () => {
+  //       if (intervalId) {
+  //         clearInterval(intervalId);
+  //       }
+  //     };
+  //   }, []);
+  // }
 
   return (
     <div className={styles.container}>
