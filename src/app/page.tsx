@@ -17,15 +17,17 @@ const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
   const newcalc = structuredClone(bombMap);
   const h = userInputs.length;
   const w = userInputs[0].length;
+  console.log(userInputs);
+  console.log(bombMap);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (userInputs[y][x] === -1 || userInputs[y][x] === 2) {
+      if (userInputs[y][x] === -1) {
+        newcalc[y][x] = userInputs[y][x];
         continue;
       }
       newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
     }
   }
-  console.log(newcalc);
   return newcalc;
 };
 
@@ -124,7 +126,7 @@ export default function Home() {
     setuserInputs(newuserInputs);
   };
 
-  const board = calcBoard(userInputs, bombMap);
+  // const board = calcBoard(userInputs, bombMap);
 
   function App() {
     useEffect(() => {
@@ -146,7 +148,7 @@ export default function Home() {
         <p>{count}</p>
       </div>
       <div className={styles.board}>
-        {userInputs.map((row, y) =>
+        {calcBoard(userInputs, bombMap).map((row, y) =>
           row.map((value, x) => (
             <button
               className={styles.block}
@@ -154,23 +156,19 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                backgroundPosition: `${value === 1 ? -270 : value === 2 ? -240 : 30}px`,
-                opacity: value === -1 ? 0 : 1,
+                opacity: value > -1 ? 1 : 0,
               }}
-            />
-          )),
-        )}
-        {calcBoard(userInputs, bombMap).map((row, y) =>
-          row.map((value, x) => (
-            <div
-              className={styles.undercell}
-              key={`${x}-${y}`}
-              onClick={() => leftclick(x, y)}
-              onContextMenu={(event) => rightclick(x, y, event)}
-              style={{
-                backgroundPosition: `${value === 10 ? -300 : value === 100 ? 0 : value === 200 ? -30 : value === 300 ? -60 : value === 400 ? -90 : value === 500 ? -120 : value === 600 ? -150 : value === 700 ? -180 : value === 800 ? -210 : 30}px`,
-              }}
-            />
+            >
+              <div
+                className={styles.undercell}
+                key={`${x}-${y}`}
+                onClick={() => leftclick(x, y)}
+                onContextMenu={(event) => rightclick(x, y, event)}
+                style={{
+                  backgroundPosition: `${value === 10 ? -300 : value === 100 ? 0 : value === 200 ? -30 : value === 300 ? -60 : value === 400 ? -90 : value === 500 ? -120 : value === 600 ? -150 : value === 700 ? -180 : value === 800 ? -210 : value === 1 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
+                }}
+              />
+            </button>
           )),
         )}
       </div>
