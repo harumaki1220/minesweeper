@@ -21,11 +21,8 @@ const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
   console.log(bombMap);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (userInputs[y][x] === -1) {
-        newcalc[y][x] = userInputs[y][x];
-        continue;
-      }
       newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
+      console.log(newcalc);
     }
   }
   return newcalc;
@@ -86,7 +83,7 @@ export default function Home() {
   // 0:透明, -1:開ける, 1:旗, 2:はてな,
 
   // タイマー
-  // const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0);
 
   const leftclick = (x: number, y: number) => {
     const newbombMap = structuredClone(bombMap);
@@ -95,7 +92,6 @@ export default function Home() {
     if (newuserInputs[y][x] === 0) {
       newuserInputs[y][x] = -1;
     }
-    console.log(newuserInputs);
 
     const first = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
@@ -113,7 +109,6 @@ export default function Home() {
       aroundBomCheck(newbombMap);
       setbombMap(newbombMap);
     }
-
     setuserInputs(newuserInputs);
   };
 
@@ -128,23 +123,23 @@ export default function Home() {
 
   // const board = calcBoard(userInputs, bombMap);
 
-  // function App() {
-  //   useEffect(() => {
-  //     const intervalId = setInterval(() => {
-  //       setCount((prevCount) => prevCount + 1);
-  //     }, 1000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     setCount((prevCount) => prevCount + 1);
+  //   }, 1000);
 
-  //     return () => {
-  //       if (intervalId) {
-  //         clearInterval(intervalId);
-  //       }
-  //     };
-  //   }, []);
-  // }
+  //   return () => {
+  //     if (intervalId) {
+  //       clearInterval(intervalId);
+  //     }
+  //   };
+  // }, []);
 
   return (
     <div className={styles.container}>
-      <div>{/* <p>{count}</p> */}</div>
+      <div>
+        <p>{count}</p>
+      </div>
       <div className={styles.board}>
         {calcBoard(userInputs, bombMap).map((row, y) =>
           row.map((value, x) => (
@@ -154,16 +149,13 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                opacity: value > -1 ? 1 : 0,
+                opacity: value === -1 ? 0 : 1,
               }}
             >
               <div
                 className={styles.undercell}
-                key={`${x}-${y}`}
-                onClick={() => leftclick(x, y)}
-                onContextMenu={(event) => rightclick(x, y, event)}
                 style={{
-                  backgroundPosition: `${value === 10 ? -300 : value === 100 ? 0 : value === 200 ? -30 : value === 300 ? -60 : value === 400 ? -90 : value === 500 ? -120 : value === 600 ? -150 : value === 700 ? -180 : value === 800 ? -210 : value === 1 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
+                  backgroundPosition: `${value === 9 ? -300 : value === 99 ? 0 : value === 199 ? -30 : value === 299 ? -60 : value === 399 ? -90 : value === 499 ? -120 : value === 599 ? -150 : value === 699 ? -180 : value === 799 ? -210 : value === 1 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
                 }}
               />
             </button>
