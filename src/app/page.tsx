@@ -21,20 +21,25 @@ const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
   console.log(bombMap);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      newcalc[y][x] = userInputs[y][x] + bombMap[y][x];
-      console.log(newcalc);
+      if (userInputs[y][x] === -1) {
+        newcalc[y][x] = bombMap[y][x] - 1;
+      } else {
+        newcalc[y][x] = userInputs[y][x];
+      }
     }
   }
+
+  console.log(newcalc);
   return newcalc;
 };
 
 const aroundBomCheck = (newbombMap: number[][]) => {
-  let numbom = 0;
   const h = newbombMap.length;
   const w = newbombMap[0].length;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (newbombMap[y][x] !== 10) {
+        let numbom = 0;
         for (const [dx, dy] of directions) {
           if (newbombMap[y + dy] !== undefined) {
             if (newbombMap[y + dy][x + dx] === 10) {
@@ -43,17 +48,28 @@ const aroundBomCheck = (newbombMap: number[][]) => {
           }
         }
         newbombMap[y][x] = numbom * 100;
-        numbom = 0;
+        // numbom * 100 - 1の値で爆弾数表示
       }
     }
   }
 };
 
-// 再起関数
-// for (let y = 0; y < 9; y++) {
-//   for (let x = 0; x < 9; x++) {
-//   }
-// }
+// 再帰関数
+const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: number[][]) => {
+  const h = userInputs.length;
+  const w = userInputs[0].length;
+
+  if (x < 0 || x >= w || y < 0 || y >= h) return;
+  if (userInputs[y][x] !== 0) return;
+
+  userInputs[y][x] = -1;
+  //8方向にボムが無いなら、再帰的に周囲のセルを開ける
+  if (bombMap[y][x] === 0) {
+    for (const [dx, dy] of directions) {
+      openRecursive(x + dx, y + dy, bombMap, userInputs);
+    }
+  }
+};
 
 export default function Home() {
   const [bombMap, setbombMap] = useState([
@@ -87,20 +103,29 @@ export default function Home() {
 
   const leftclick = (x: number, y: number) => {
     const newbombMap = structuredClone(bombMap);
+    let currentBombMap = bombMap;
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
     if (newuserInputs[y][x] === 0) {
       newuserInputs[y][x] = -1;
     }
 
-    const first = bombMap.flat().every((value) => value === 0);
+    // 爆弾があったらゲームオーバー
+    // if (bombMap[y][x] === 10) {
+    //   alert('GAME OVER!');
+    // 全ての爆弾を表示する処理を入れる
+    //   setuserInputs(newuserInputs);
+    //   return;
+    // }
+
+    const firstClick = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
-    if (first) {
+    if (firstClick) {
       let bombcount = 10;
       while (bombcount > 0) {
-        const rx = Math.floor(Math.random() * 9);
-        const ry = Math.floor(Math.random() * 9);
-        // 初級9x9の盤面に爆弾をランダム配置
+        const rx = Math.floor(Math.random() * userInputs[0].length);
+        const ry = Math.floor(Math.random() * userInputs.length);
+        // h x wの盤面に爆弾をランダム配置
         if (newbombMap[ry][rx] === 0 && (ry !== y || rx !== x)) {
           newbombMap[ry][rx] = 10;
           bombcount--;
@@ -108,7 +133,9 @@ export default function Home() {
       }
       aroundBomCheck(newbombMap);
       setbombMap(newbombMap);
+      currentBombMap = newbombMap;
     }
+    openRecursive(x, y, currentBombMap, newuserInputs);
     setuserInputs(newuserInputs);
   };
 
@@ -149,7 +176,10 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                opacity: value === -1 ? 0 : 1,
+                border: value === -1 ? '1px solid #808080' : '4px solid #808080',
+                borderTopColor: value === -1 ? '#808080' : '#fff',
+                borderLeftColor: value === -1 ? '#808080' : '#fff',
+                backgroundColor: value === 9 ? 'red' : '#c6c6c6',
               }}
             >
               <div
