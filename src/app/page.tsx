@@ -56,11 +56,14 @@ const aroundBomCheck = (newbombMap: number[][]) => {
 const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: number[][]) => {
   const h = userInputs.length;
   const w = userInputs[0].length;
-
-  if (x < 0 || x >= w || y < 0 || y >= h) return;
-  if (userInputs[y][x] !== 0) return;
-
+  if (x < 0 || x >= w || y < 0 || y >= h) {
+    return;
+  }
+  if (userInputs[y][x] !== 0) {
+    return;
+  }
   userInputs[y][x] = -1;
+
   //8方向にボムが無いなら、再帰的に周囲のセルを開ける
   if (bombMap[y][x] === 0) {
     for (const [dx, dy] of directions) {
@@ -104,9 +107,9 @@ export default function Home() {
     let currentBombMap = bombMap;
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
-    if (newuserInputs[y][x] === 0) {
-      newuserInputs[y][x] = -1;
-    }
+    // if (newuserInputs[y][x] === 0) {
+    //   newuserInputs[y][x] = -1;
+    // }
 
     // 爆弾があったらゲームオーバー
     // if (bombMap[y][x] === 10) {
@@ -190,7 +193,7 @@ export default function Home() {
               }}
             >
               <div
-                className={styles.undercell}
+                className={styles.cell}
                 style={{
                   backgroundPosition: `${value === 9 ? -300 : value === 99 ? 0 : value === 199 ? -30 : value === 299 ? -60 : value === 399 ? -90 : value === 499 ? -120 : value === 599 ? -150 : value === 699 ? -180 : value === 799 ? -210 : value === 1 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
                 }}

@@ -28,7 +28,7 @@
   border-color: #fff #808080 #808080 #fff;
 }
 
-.undercell {
+.cell {
   width: 30px;
   height: 30px;
   background: url('~/src/assets/images/icons.png') no-repeat;
