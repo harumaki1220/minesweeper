@@ -17,8 +17,6 @@ const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
   const newcalc = structuredClone(bombMap);
   const h = userInputs.length;
   const w = userInputs[0].length;
-  console.log(userInputs);
-  console.log(bombMap);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (userInputs[y][x] === -1) {
@@ -28,7 +26,7 @@ const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
       }
     }
   }
-
+  console.log(bombMap);
   console.log(newcalc);
   return newcalc;
 };
@@ -176,9 +174,18 @@ export default function Home() {
               onClick={() => leftclick(x, y)}
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
-                border: value === -1 ? '1px solid #808080' : '4px solid #808080',
-                borderTopColor: value === -1 ? '#808080' : '#fff',
-                borderLeftColor: value === -1 ? '#808080' : '#fff',
+                border:
+                  value === 0
+                    ? '4px solid #808080'
+                    : value === 1
+                      ? '4px solid #808080'
+                      : value === 2
+                        ? '4px solid #808080'
+                        : '1px solid #808080',
+                borderTopColor:
+                  value === 0 ? '#fff' : value === 1 ? '#fff' : value === 2 ? '#fff' : '#808080',
+                borderLeftColor:
+                  value === 0 ? '#fff' : value === 1 ? '#fff' : value === 2 ? '#fff' : '#808080',
                 backgroundColor: value === 9 ? 'red' : '#c6c6c6',
               }}
             >
