@@ -39,8 +39,11 @@ const aroundBomCheck = (newbombMap: number[][]) => {
       if (newbombMap[y][x] !== 10) {
         let numbom = 0;
         for (const [dx, dy] of directions) {
-          if (newbombMap[y + dy] !== undefined) {
-            if (newbombMap[y + dy][x + dx] === 10) {
+          const ny = y + dy;
+          const nx = x + dx;
+          // xとyの両方で、盤面の範囲内にあるかを確認する
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+            if (newbombMap[ny][nx] === 10) {
               numbom++;
             }
           }
@@ -67,7 +70,20 @@ const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: nu
   //8方向にボムが無いなら、再帰的に周囲のセルを開ける
   if (bombMap[y][x] === 0) {
     for (const [dx, dy] of directions) {
-      openRecursive(x + dx, y + dy, bombMap, userInputs);
+      const isDiagonal = dx !== 0 && dy !== 0;
+
+      // もし進む方向が「斜め」の場合
+      if (isDiagonal) {
+        // その斜めマスに隣接する、元のマスから見て上下左右のマスが爆弾でないことを確認
+        // 右下に進む場合、右のマスと下のマスが両方とも爆弾だと道が塞がれていると判断
+        const isPathClear = bombMap[y]?.[x + dx] !== 10 || bombMap[y + dy]?.[x] !== 10;
+
+        if (isPathClear) {
+          openRecursive(x + dx, y + dy, bombMap, userInputs);
+        }
+      } else {
+        openRecursive(x + dx, y + dy, bombMap, userInputs);
+      }
     }
   }
 };
