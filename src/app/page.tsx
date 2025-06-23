@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './page.module.css';
 
 const directions = [
@@ -12,6 +12,17 @@ const directions = [
   [0, -1],
   [-1, -1],
 ];
+
+const difficulty_levels = {
+  beginner: { width: 9, height: 9, bombs: 10 },
+  intermediate: { width: 16, height: 16, bombs: 40 },
+  advanced: { width: 30, height: 16, bombs: 99 },
+};
+
+//指定されたサイズの空の盤面を作成
+const createEmptyBoard = (height: number, width: number, fillValue: number = 0): number[][] => {
+  return Array.from({ length: height }, () => Array.from({ length: width }, () => fillValue));
+};
 
 const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
   const newcalc = structuredClone(bombMap);
@@ -42,10 +53,8 @@ const aroundBomCheck = (newbombMap: number[][]) => {
           const ny = y + dy;
           const nx = x + dx;
           // xとyの両方で、盤面の範囲内にあるかを確認する
-          if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
-            if (newbombMap[ny][nx] === 10) {
-              numbom++;
-            }
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w && newbombMap[ny][nx] === 10) {
+            numbom++;
           }
         }
         newbombMap[y][x] = numbom * 100;
@@ -59,10 +68,7 @@ const aroundBomCheck = (newbombMap: number[][]) => {
 const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: number[][]) => {
   const h = userInputs.length;
   const w = userInputs[0].length;
-  if (x < 0 || x >= w || y < 0 || y >= h) {
-    return;
-  }
-  if (userInputs[y][x] !== 0) {
+  if (x < 0 || x >= w || y < 0 || y >= h || userInputs[y][x] !== 0) {
     return;
   }
   userInputs[y][x] = -1;
@@ -74,7 +80,6 @@ const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: nu
 
       // もし進む方向が「斜め」の場合
       if (isDiagonal) {
-        // その斜めマスに隣接する、元のマスから見て上下左右のマスが爆弾でないことを確認
         // 右下に進む場合、右のマスと下のマスが両方とも爆弾だと道が塞がれていると判断
         const isPathClear = bombMap[y]?.[x + dx] !== 10 || bombMap[y + dy]?.[x] !== 10;
 
@@ -89,31 +94,19 @@ const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: nu
 };
 
 export default function Home() {
-  const [bombMap, setbombMap] = useState([
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-  ]);
-  //0:セーフ, 10:爆弾
+  const [settings, setSettings] = useState(difficulty_levels.beginner);
+  const [bombMap, setBombMap] = useState(() => createEmptyBoard(settings.height, settings.width));
+  const [userInputs, setUserInputs] = useState(() =>
+    createEmptyBoard(settings.height, settings.width),
+  );
+  const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
 
-  const [userInputs, setuserInputs] = useState([
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-  ]); //初級,9×9,ボム10個
-  // 0:透明, -1:開ける, 1:旗, 2:はてな,
+  // 難易度が変更された時にゲームをリセットする
+  useEffect(() => {
+    setBombMap(createEmptyBoard(settings.height, settings.width));
+    setUserInputs(createEmptyBoard(settings.height, settings.width));
+    setGameState('playing');
+  }, [settings]);
 
   // タイマー
   const [count, setCount] = useState(0);
@@ -123,9 +116,6 @@ export default function Home() {
     let currentBombMap = bombMap;
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
-    // if (newuserInputs[y][x] === 0) {
-    //   newuserInputs[y][x] = -1;
-    // }
 
     // 爆弾があったらゲームオーバー
     // if (bombMap[y][x] === 10) {
@@ -138,7 +128,7 @@ export default function Home() {
     const firstClick = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
     if (firstClick) {
-      let bombcount = 10;
+      let bombcount = settings.bombs;
       while (bombcount > 0) {
         const rx = Math.floor(Math.random() * userInputs[0].length);
         const ry = Math.floor(Math.random() * userInputs.length);
@@ -149,11 +139,11 @@ export default function Home() {
         }
       }
       aroundBomCheck(newbombMap);
-      setbombMap(newbombMap);
+      setBombMap(newbombMap);
       currentBombMap = newbombMap;
     }
     openRecursive(x, y, currentBombMap, newuserInputs);
-    setuserInputs(newuserInputs);
+    setUserInputs(newuserInputs);
   };
 
   const rightclick = (x: number, y: number, event: React.MouseEvent) => {
@@ -162,7 +152,7 @@ export default function Home() {
     const newuserInputs = structuredClone(userInputs);
     if (newuserInputs[y][x] === 0 || newuserInputs[y][x] === 1 || newuserInputs[y][x] === 2)
       newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
-    setuserInputs(newuserInputs);
+    setUserInputs(newuserInputs);
   };
 
   // const board = calcBoard(userInputs, bombMap);
@@ -182,9 +172,20 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <div>
+        <button onClick={() => setSettings(difficulty_levels.beginner)}>初級</button>
+        <button onClick={() => setSettings(difficulty_levels.intermediate)}>中級</button>
+        <button onClick={() => setSettings(difficulty_levels.advanced)}>上級</button>
+      </div>
+      <div>
         <p>{count}</p>
       </div>
-      <div className={styles.board}>
+      <div
+        className={styles.board}
+        style={{
+          width: settings.width * 30,
+          height: settings.height * 30,
+        }}
+      >
         {calcBoard(userInputs, bombMap).map((row, y) =>
           row.map((value, x) => (
             <button
