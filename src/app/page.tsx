@@ -124,6 +124,9 @@ export default function Home() {
   const [count, setCount] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
 
+  const flagCount = userInputs.flat().filter((cell) => cell === 1).length;
+  const remainingBombs = settings.bombs - flagCount;
+
   useEffect(() => {
     // isTimerRunningがtrueで、かつゲームがプレイ中の場合のみタイマーを動かす
     if (timerRunning && gameState === 'playing') {
@@ -138,18 +141,21 @@ export default function Home() {
   }, [timerRunning, gameState]);
 
   const leftclick = (x: number, y: number) => {
+    if (gameState !== 'playing' || userInputs[y][x] !== 0) {
+      return;
+    }
     const newbombMap = structuredClone(bombMap);
     let currentBombMap = bombMap;
     console.log(x, y);
     const newuserInputs = structuredClone(userInputs);
 
     // 爆弾があったらゲームオーバー
-    // if (bombMap[y][x] === 10) {
-    //   alert('GAME OVER!');
-    // 全ての爆弾を表示する処理を入れる
-    //   setuserInputs(newuserInputs);
-    //   return;
-    // }
+    if (bombMap[y][x] === 10) {
+      setGameState('lost');
+      setTimerRunning(false);
+      alert('GAME OVER!');
+      return;
+    }
 
     const firstClick = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
@@ -174,11 +180,12 @@ export default function Home() {
   };
 
   const rightclick = (x: number, y: number, event: React.MouseEvent) => {
+    if (gameState !== 'playing') return;
     event?.preventDefault();
     console.log(x, y);
+    if (userInputs[y][x] === -1) return;
     const newuserInputs = structuredClone(userInputs);
-    if (newuserInputs[y][x] === 0 || newuserInputs[y][x] === 1 || newuserInputs[y][x] === 2)
-      newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
+    newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
     setUserInputs(newuserInputs);
   };
 
@@ -227,11 +234,13 @@ export default function Home() {
         <button onClick={() => setSettings(difficulty_levels.intermediate)}>中級</button>
         <button onClick={() => setSettings(difficulty_levels.advanced)}>上級</button>
       </div>
-      <button onClick={restart}>リスタート</button>
 
-      <div>
-        <p>{count}</p>
+      <div className={styles.gameInfo}>
+        <div>{remainingBombs}</div>
+        <button onClick={restart}>リスタート</button>
+        <div>{count}</div>
       </div>
+
       <div
         className={styles.board}
         style={{

@@ -58,4 +58,11 @@
   width: 50px;
 }
 
+.gameInfo {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-family: 'Share Tech Mono', monospace;
+}
+
 /* デジタル表示風フォント */
