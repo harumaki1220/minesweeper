@@ -40,4 +40,22 @@
   background-color: #000;
 }
 
+.customSettings {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.inputItem {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.inputItem input {
+  width: 50px;
+}
+
 /* デジタル表示風フォント */

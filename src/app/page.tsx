@@ -99,6 +99,8 @@ export default function Home() {
   const [userInputs, setUserInputs] = useState(() =>
     createEmptyBoard(settings.height, settings.width),
   );
+  const [customSettings, setCustomSettings] = useState({ width: 10, height: 10, bombs: 10 });
+  const [custom, setCustom] = useState(false);
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
 
   // 難易度が変更された時にゲームをリセットする
@@ -106,10 +108,34 @@ export default function Home() {
     setBombMap(createEmptyBoard(settings.height, settings.width));
     setUserInputs(createEmptyBoard(settings.height, settings.width));
     setGameState('playing');
+    setCount(0);
+    setTimerRunning(false);
   }, [settings]);
+
+  const restart = () => {
+    setBombMap(createEmptyBoard(settings.height, settings.width));
+    setUserInputs(createEmptyBoard(settings.height, settings.width));
+    setGameState('playing');
+    setCount(0);
+    setTimerRunning(false);
+  };
 
   // タイマー
   const [count, setCount] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  useEffect(() => {
+    // isTimerRunningがtrueで、かつゲームがプレイ中の場合のみタイマーを動かす
+    if (timerRunning && gameState === 'playing') {
+      const intervalId = setInterval(() => {
+        setCount((prevCount) => prevCount + 1);
+      }, 1000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [timerRunning, gameState]);
 
   const leftclick = (x: number, y: number) => {
     const newbombMap = structuredClone(bombMap);
@@ -128,6 +154,7 @@ export default function Home() {
     const firstClick = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
     if (firstClick) {
+      setTimerRunning(true);
       let bombcount = settings.bombs;
       while (bombcount > 0) {
         const rx = Math.floor(Math.random() * userInputs[0].length);
@@ -155,27 +182,53 @@ export default function Home() {
     setUserInputs(newuserInputs);
   };
 
-  // const board = calcBoard(userInputs, bombMap);
-
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     setCount((prevCount) => prevCount + 1);
-  //   }, 1000);
-
-  //   return () => {
-  //     if (intervalId) {
-  //       clearInterval(intervalId);
-  //     }
-  //   };
-  // }, []);
-
   return (
     <div className={styles.container}>
+      {
+        <div className={styles.customSettings}>
+          <div className={styles.inputItem}>
+            <label htmlFor="customWidth">幅:</label>
+            <input
+              id="customWidth"
+              type="number"
+              value={customSettings.width}
+              onChange={(e) =>
+                setCustomSettings({ ...customSettings, width: parseInt(e.target.value, 10) || 0 })
+              }
+            />
+          </div>
+          <div className={styles.inputItem}>
+            <label htmlFor="customHeight">高さ:</label>
+            <input
+              id="customHeight"
+              type="number"
+              value={customSettings.height}
+              onChange={(e) =>
+                setCustomSettings({ ...customSettings, height: parseInt(e.target.value, 10) || 0 })
+              }
+            />
+          </div>
+          <div className={styles.inputItem}>
+            <label htmlFor="customBombs">爆弾数:</label>
+            <input
+              id="customBombs"
+              type="number"
+              value={customSettings.bombs}
+              onChange={(e) =>
+                setCustomSettings({ ...customSettings, bombs: parseInt(e.target.value, 10) || 0 })
+              }
+            />
+          </div>
+          <button onClick={() => setSettings(customSettings)}>更新</button>
+        </div>
+      }
       <div>
         <button onClick={() => setSettings(difficulty_levels.beginner)}>初級</button>
         <button onClick={() => setSettings(difficulty_levels.intermediate)}>中級</button>
         <button onClick={() => setSettings(difficulty_levels.advanced)}>上級</button>
       </div>
+      <button onClick={restart}>リスタート</button>
+
       <div>
         <p>{count}</p>
       </div>
