@@ -21,28 +21,48 @@ const difficulty_levels = {
 
 //指定されたサイズの空の盤面を作成
 const createEmptyBoard = (height: number, width: number, fillValue: number = 0): number[][] => {
-  return Array.from({ length: height }, () => Array.from({ length: width }, () => fillValue));
+  const validHeight = Math.max(1, height);
+  const validWidth = Math.max(1, width);
+  // ここで負の値を指定できないようにする
+  return Array.from({ length: validHeight }, () =>
+    Array.from({ length: validWidth }, () => fillValue),
+  );
 };
 
-const calcBoard = (userInputs: number[][], bombMap: number[][]) => {
-  const newcalc = structuredClone(bombMap);
+const calcBoard = (
+  userInputs: number[][],
+  bombMap: number[][],
+  gameState: 'playing' | 'won' | 'lost',
+) => {
+  if (!userInputs || userInputs.length === 0) return [];
+
+  const displayBoard = createEmptyBoard(userInputs.length, userInputs[0].length);
   const h = userInputs.length;
   const w = userInputs[0].length;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
+      // プレイ中の表示ロジック
       if (userInputs[y][x] === -1) {
-        newcalc[y][x] = bombMap[y][x] - 1;
+        displayBoard[y][x] = bombMap[y][x] - 1; // 開いたセル
       } else {
-        newcalc[y][x] = userInputs[y][x];
+        displayBoard[y][x] = userInputs[y][x]; // 旗、？、初期状態
+      }
+      if (gameState === 'lost') {
+        if (userInputs[y][x] === -2) {
+          displayBoard[y][x] = 8; // 踏んだ爆弾
+        } else if (bombMap[y][x] === 10 && userInputs[y][x] !== 1) {
+          displayBoard[y][x] = 9; // 踏んでいない他の爆弾
+        } else if (bombMap[y][x] !== 10 && userInputs[y][x] === 1) {
+          displayBoard[y][x] = 11; // 間違った旗
+        }
       }
     }
   }
-  console.log(bombMap);
-  console.log(newcalc);
-  return newcalc;
+  return displayBoard;
 };
 
 const aroundBomCheck = (newbombMap: number[][]) => {
+  if (!newbombMap || newbombMap.length === 0) return;
   const h = newbombMap.length;
   const w = newbombMap[0].length;
   for (let y = 0; y < h; y++) {
@@ -52,13 +72,11 @@ const aroundBomCheck = (newbombMap: number[][]) => {
         for (const [dx, dy] of directions) {
           const ny = y + dy;
           const nx = x + dx;
-          // xとyの両方で、盤面の範囲内にあるかを確認する
           if (ny >= 0 && ny < h && nx >= 0 && nx < w && newbombMap[ny][nx] === 10) {
             numbom++;
           }
         }
         newbombMap[y][x] = numbom * 100;
-        // numbom * 100 - 1の値で爆弾数表示
       }
     }
   }
@@ -66,6 +84,7 @@ const aroundBomCheck = (newbombMap: number[][]) => {
 
 // 再帰関数
 const openRecursive = (x: number, y: number, bombMap: number[][], userInputs: number[][]) => {
+  if (!userInputs || userInputs.length === 0) return;
   const h = userInputs.length;
   const w = userInputs[0].length;
   if (x < 0 || x >= w || y < 0 || y >= h || userInputs[y][x] !== 0) {
@@ -103,6 +122,13 @@ export default function Home() {
   const [custom, setCustom] = useState(false);
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
 
+  // タイマー
+  const [count, setCount] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  const flagCount = userInputs.flat().filter((cell) => cell === 1).length;
+  const remainingBombs = settings.bombs - flagCount;
+
   // 難易度が変更された時にゲームをリセットする
   useEffect(() => {
     setBombMap(createEmptyBoard(settings.height, settings.width));
@@ -120,15 +146,17 @@ export default function Home() {
     setTimerRunning(false);
   };
 
-  // タイマー
-  const [count, setCount] = useState(0);
-  const [timerRunning, setTimerRunning] = useState(false);
+  useEffect(() => {
+    const maxBombs = customSettings.width * customSettings.height - 1;
+    if (maxBombs < 0) return;
 
-  const flagCount = userInputs.flat().filter((cell) => cell === 1).length;
-  const remainingBombs = settings.bombs - flagCount;
+    if (customSettings.bombs > maxBombs) {
+      setCustomSettings((prev) => ({ ...prev, bombs: maxBombs }));
+    }
+  }, [customSettings.width, customSettings.height, customSettings.bombs]);
 
   useEffect(() => {
-    // isTimerRunningがtrueで、かつゲームがプレイ中の場合のみタイマーを動かす
+    // timerRunningがtrueで、かつゲームがプレイ中の場合のみタイマーを動かす
     if (timerRunning && gameState === 'playing') {
       const intervalId = setInterval(() => {
         setCount((prevCount) => prevCount + 1);
@@ -140,32 +168,49 @@ export default function Home() {
     }
   }, [timerRunning, gameState]);
 
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+
+    // 開かれていないマスの数を数える
+    const unopenedCells = userInputs.flat().filter((cell) => cell !== -1).length;
+
+    // 開かれていないマスの数と爆弾の数が同じになったら勝利
+    if (unopenedCells === settings.bombs) {
+      setGameState('won');
+      setTimerRunning(false);
+      alert('GAME CLEAR!');
+
+      // クリア時に、残っている爆弾に旗を立てる
+      const finalUserInputs = structuredClone(userInputs);
+      for (let y = 0; y < settings.height; y++) {
+        for (let x = 0; x < settings.width; x++) {
+          if (bombMap[y][x] === 10) {
+            finalUserInputs[y][x] = 1;
+          }
+        }
+      }
+      setUserInputs(finalUserInputs);
+    }
+  }, [userInputs, bombMap, settings, gameState]);
+
   const leftclick = (x: number, y: number) => {
     if (gameState !== 'playing' || userInputs[y][x] !== 0) {
       return;
     }
-    const newbombMap = structuredClone(bombMap);
+
     let currentBombMap = bombMap;
     console.log(x, y);
-    const newuserInputs = structuredClone(userInputs);
-
-    // 爆弾があったらゲームオーバー
-    if (bombMap[y][x] === 10) {
-      setGameState('lost');
-      setTimerRunning(false);
-      alert('GAME OVER!');
-      return;
-    }
 
     const firstClick = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
     if (firstClick) {
+      const newbombMap = structuredClone(bombMap);
       setTimerRunning(true);
       let bombcount = settings.bombs;
       while (bombcount > 0) {
         const rx = Math.floor(Math.random() * userInputs[0].length);
         const ry = Math.floor(Math.random() * userInputs.length);
-        // h x wの盤面に爆弾をランダム配置
+        // h wの盤面に爆弾をランダム配置
         if (newbombMap[ry][rx] === 0 && (ry !== y || rx !== x)) {
           newbombMap[ry][rx] = 10;
           bombcount--;
@@ -175,18 +220,62 @@ export default function Home() {
       setBombMap(newbombMap);
       currentBombMap = newbombMap;
     }
+    if (currentBombMap[y][x] === 10) {
+      setGameState('lost');
+      setTimerRunning(false);
+      const finalUserInputs = structuredClone(userInputs);
+      finalUserInputs[y][x] = -2;
+      setUserInputs(finalUserInputs);
+      alert('GAME OVER!');
+      return;
+    }
+    const newuserInputs = structuredClone(userInputs);
     openRecursive(x, y, currentBombMap, newuserInputs);
     setUserInputs(newuserInputs);
   };
 
   const rightclick = (x: number, y: number, event: React.MouseEvent) => {
-    if (gameState !== 'playing') return;
+    if (gameState !== 'playing' || userInputs[y][x] === -1) return;
     event?.preventDefault();
     console.log(x, y);
-    if (userInputs[y][x] === -1) return;
     const newuserInputs = structuredClone(userInputs);
     newuserInputs[y][x] = (newuserInputs[y][x] + 1) % 3;
     setUserInputs(newuserInputs);
+  };
+
+  const handleStartCustomGame = () => {
+    const { width, height, bombs } = customSettings;
+    const maxBombs = width * height - 1;
+    // 爆弾がボード全体を埋め尽くすないように-1
+
+    if (width <= 0 || height <= 0) {
+      alert('幅と高さは1以上にしてください。(0と負の値はダメよ)');
+      return;
+    }
+
+    if (bombs > maxBombs) {
+      alert(`爆弾の数は${maxBombs}個以下にしてください。(ゲームが成り立たないよ！)`);
+      setCustomSettings((prev) => ({ ...prev, bombs: maxBombs }));
+      return;
+    }
+
+    if (bombs < 1) {
+      alert('爆弾は1個以上に設定してください。(爆弾がないとゲームが成り立たないよ！)');
+      return;
+    }
+
+    setSettings(customSettings);
+    setCustom(false);
+  };
+
+  const getFaceStyle = () => {
+    if (gameState === 'won') {
+      return { backgroundPosition: '-360px' }; // サングラス
+    }
+    if (gameState === 'lost') {
+      return { backgroundPosition: '-390px' }; // (X ^ X)
+    }
+    return { backgroundPosition: '-330px' }; // プレイ中はふつうのにこちゃんマーク
   };
 
   return (
@@ -226,7 +315,7 @@ export default function Home() {
               }
             />
           </div>
-          <button onClick={() => setSettings(customSettings)}>更新</button>
+          <button onClick={handleStartCustomGame}>更新</button>
         </div>
       }
       <div>
@@ -237,7 +326,9 @@ export default function Home() {
 
       <div className={styles.gameInfo}>
         <div>{remainingBombs}</div>
-        <button onClick={restart}>リスタート</button>
+        <button className={styles.faceButton} onClick={restart}>
+          <div className={styles.face} style={getFaceStyle()} />
+        </button>
         <div>{count}</div>
       </div>
 
@@ -248,7 +339,7 @@ export default function Home() {
           height: settings.height * 30,
         }}
       >
-        {calcBoard(userInputs, bombMap).map((row, y) =>
+        {calcBoard(userInputs, bombMap, gameState).map((row, y) =>
           row.map((value, x) => (
             <button
               className={styles.block}
@@ -257,24 +348,20 @@ export default function Home() {
               onContextMenu={(event) => rightclick(x, y, event)}
               style={{
                 border:
-                  value === 0
+                  value === 0 || value === 1 || value === 2
                     ? '4px solid #808080'
-                    : value === 1
-                      ? '4px solid #808080'
-                      : value === 2
-                        ? '4px solid #808080'
-                        : '1px solid #808080',
-                borderTopColor:
-                  value === 0 ? '#fff' : value === 1 ? '#fff' : value === 2 ? '#fff' : '#808080',
-                borderLeftColor:
-                  value === 0 ? '#fff' : value === 1 ? '#fff' : value === 2 ? '#fff' : '#808080',
-                backgroundColor: value === 9 ? 'red' : '#c6c6c6',
+                    : '1px solid #808080',
+                borderTopColor: value === 0 || value === 1 || value === 2 ? '#fff' : '#808080',
+                borderLeftColor: value === 0 || value === 1 || value === 2 ? '#fff' : '#808080',
+                backgroundColor: value === 8 ? 'red' : value === 11 ? '#ffa0a0' : '#c6c6c6',
+                // 間違った旗(11)
               }}
             >
               <div
                 className={styles.cell}
                 style={{
-                  backgroundPosition: `${value === 9 ? -300 : value === 99 ? 0 : value === 199 ? -30 : value === 299 ? -60 : value === 399 ? -90 : value === 499 ? -120 : value === 599 ? -150 : value === 699 ? -180 : value === 799 ? -210 : value === 1 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
+                  // 踏んだ爆弾(8)他の爆弾(9)
+                  backgroundPosition: `${value === 8 || value === 9 ? -300 : value === 99 ? 0 : value === 199 ? -30 : value === 299 ? -60 : value === 399 ? -90 : value === 499 ? -120 : value === 599 ? -150 : value === 699 ? -180 : value === 799 ? -210 : value === 1 || value === 11 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
                 }}
               />
             </button>
