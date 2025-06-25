@@ -1,8 +1,11 @@
 .container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  text-align: center;
 }
 
 .header {
@@ -38,6 +41,8 @@
 }
 
 .gameContainer {
+  display: inline-block;
+  align-items: center;
   padding: 10px;
   background-color: #c0c0c0;
   border: 4px solid;

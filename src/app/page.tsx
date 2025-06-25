@@ -323,7 +323,7 @@ export default function Home() {
         <button onClick={() => setSettings(difficulty_levels.advanced)}>上級</button>
       </div>
 
-      <div className={styles.gameContainer} style={{ width: settings.width * 38 }}>
+      <div className={styles.gameContainer}>
         <div className={styles.header}>
           <div className={styles.digitalDisplay}>{String(remainingBombs).padStart(3, '0')}</div>
           <button className={styles.faceButton} onClick={restart}>
