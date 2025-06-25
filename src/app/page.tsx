@@ -331,43 +331,42 @@ export default function Home() {
           </button>
           <div className={styles.digitalDisplay}>{String(count).padStart(3, '0')}</div>
         </div>
-      </div>
-
-      <div
-        className={styles.board}
-        style={{
-          width: settings.width * 35,
-          height: settings.height * 35,
-        }}
-      >
-        {calcBoard(userInputs, bombMap, gameState).map((row, y) =>
-          row.map((value, x) => (
-            <button
-              className={styles.block}
-              key={`${x}-${y}`}
-              onClick={() => leftclick(x, y)}
-              onContextMenu={(event) => rightclick(x, y, event)}
-              style={{
-                border:
-                  value === 0 || value === 1 || value === 2
-                    ? '4px solid #808080'
-                    : '1px solid #808080',
-                borderTopColor: value === 0 || value === 1 || value === 2 ? '#fff' : '#808080',
-                borderLeftColor: value === 0 || value === 1 || value === 2 ? '#fff' : '#808080',
-                backgroundColor: value === 8 ? 'red' : value === 11 ? '#ffa0a0' : '#c6c6c6',
-                // 間違った旗(11)
-              }}
-            >
-              <div
-                className={styles.cell}
+        <div
+          className={styles.board}
+          style={{
+            width: settings.width * 35,
+            height: settings.height * 35,
+          }}
+        >
+          {calcBoard(userInputs, bombMap, gameState).map((row, y) =>
+            row.map((value, x) => (
+              <button
+                className={styles.block}
+                key={`${x}-${y}`}
+                onClick={() => leftclick(x, y)}
+                onContextMenu={(event) => rightclick(x, y, event)}
                 style={{
-                  // 踏んだ爆弾(8)他の爆弾(9)
-                  backgroundPosition: `${value === 8 || value === 9 ? -300 : value === 99 ? 0 : value === 199 ? -30 : value === 299 ? -60 : value === 399 ? -90 : value === 499 ? -120 : value === 599 ? -150 : value === 699 ? -180 : value === 799 ? -210 : value === 1 || value === 11 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
+                  border:
+                    value === 0 || value === 1 || value === 2
+                      ? '4px solid #808080'
+                      : '1px solid #808080',
+                  borderTopColor: value === 0 || value === 1 || value === 2 ? '#fff' : '#808080',
+                  borderLeftColor: value === 0 || value === 1 || value === 2 ? '#fff' : '#808080',
+                  backgroundColor: value === 8 ? 'red' : value === 11 ? '#ffa0a0' : '#c6c6c6',
+                  // 間違った旗(11)
                 }}
-              />
-            </button>
-          )),
-        )}
+              >
+                <div
+                  className={styles.cell}
+                  style={{
+                    // 踏んだ爆弾(8)他の爆弾(9)
+                    backgroundPosition: `${value === 8 || value === 9 ? -300 : value === 99 ? 0 : value === 199 ? -30 : value === 299 ? -60 : value === 399 ? -90 : value === 499 ? -120 : value === 599 ? -150 : value === 699 ? -180 : value === 799 ? -210 : value === 1 || value === 11 ? -270 : value === 2 ? -240 : value === -1 ? 30 : 30}px`,
+                  }}
+                />
+              </button>
+            )),
+          )}
+        </div>
       </div>
     </div>
   );
