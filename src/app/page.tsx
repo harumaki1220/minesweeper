@@ -280,63 +280,64 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      {
-        <div className={styles.customSettings}>
-          <div className={styles.inputItem}>
-            <label htmlFor="customWidth">幅:</label>
-            <input
-              id="customWidth"
-              type="number"
-              value={customSettings.width}
-              onChange={(e) =>
-                setCustomSettings({ ...customSettings, width: parseInt(e.target.value, 10) || 0 })
-              }
-            />
-          </div>
-          <div className={styles.inputItem}>
-            <label htmlFor="customHeight">高さ:</label>
-            <input
-              id="customHeight"
-              type="number"
-              value={customSettings.height}
-              onChange={(e) =>
-                setCustomSettings({ ...customSettings, height: parseInt(e.target.value, 10) || 0 })
-              }
-            />
-          </div>
-          <div className={styles.inputItem}>
-            <label htmlFor="customBombs">爆弾数:</label>
-            <input
-              id="customBombs"
-              type="number"
-              value={customSettings.bombs}
-              onChange={(e) =>
-                setCustomSettings({ ...customSettings, bombs: parseInt(e.target.value, 10) || 0 })
-              }
-            />
-          </div>
-          <button onClick={handleStartCustomGame}>更新</button>
+      <div className={styles.customSettings}>
+        <div className={styles.inputItem}>
+          <label htmlFor="customWidth">幅:</label>
+          <input
+            id="customWidth"
+            type="number"
+            value={customSettings.width}
+            onChange={(e) =>
+              setCustomSettings({ ...customSettings, width: parseInt(e.target.value, 10) || 0 })
+            }
+          />
         </div>
-      }
+        <div className={styles.inputItem}>
+          <label htmlFor="customHeight">高さ:</label>
+          <input
+            id="customHeight"
+            type="number"
+            value={customSettings.height}
+            onChange={(e) =>
+              setCustomSettings({ ...customSettings, height: parseInt(e.target.value, 10) || 0 })
+            }
+          />
+        </div>
+        <div className={styles.inputItem}>
+          <label htmlFor="customBombs">爆弾数:</label>
+          <input
+            id="customBombs"
+            type="number"
+            value={customSettings.bombs}
+            onChange={(e) =>
+              setCustomSettings({ ...customSettings, bombs: parseInt(e.target.value, 10) || 0 })
+            }
+          />
+        </div>
+        <button onClick={handleStartCustomGame}>更新</button>
+      </div>
+
       <div>
         <button onClick={() => setSettings(difficulty_levels.beginner)}>初級</button>
         <button onClick={() => setSettings(difficulty_levels.intermediate)}>中級</button>
         <button onClick={() => setSettings(difficulty_levels.advanced)}>上級</button>
       </div>
 
-      <div className={styles.gameInfo}>
-        <div>{remainingBombs}</div>
-        <button className={styles.faceButton} onClick={restart}>
-          <div className={styles.face} style={getFaceStyle()} />
-        </button>
-        <div>{count}</div>
+      <div className={styles.gameContainer} style={{ width: settings.width * 38 }}>
+        <div className={styles.header}>
+          <div className={styles.digitalDisplay}>{String(remainingBombs).padStart(3, '0')}</div>
+          <button className={styles.faceButton} onClick={restart}>
+            <div className={styles.face} style={getFaceStyle()} />
+          </button>
+          <div className={styles.digitalDisplay}>{String(count).padStart(3, '0')}</div>
+        </div>
       </div>
 
       <div
         className={styles.board}
         style={{
-          width: settings.width * 30,
-          height: settings.height * 30,
+          width: settings.width * 35,
+          height: settings.height * 35,
         }}
       >
         {calcBoard(userInputs, bombMap, gameState).map((row, y) =>
