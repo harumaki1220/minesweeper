@@ -193,13 +193,75 @@ export default function Home() {
     }
   }, [userInputs, bombMap, settings, gameState]);
 
+  const handleChordClick = (x: number, y: number) => {
+    // すでに開かれている数字セルでなければ何もしない
+    if (userInputs[y][x] !== -1 || bombMap[y][x] < 100) {
+      return;
+    }
+
+    const h = userInputs.length;
+    const w = userInputs[0].length;
+    const bombCountInCell = bombMap[y][x] / 100;
+    let flagCount = 0;
+
+    // 周囲の旗の数を数える
+    for (const [dx, dy] of directions) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (ny >= 0 && ny < h && nx >= 0 && nx < w && userInputs[ny][nx] === 1) {
+        flagCount++;
+      }
+    }
+
+    // セルの数字と旗の数が一致する場合のみ処理を続行
+    if (flagCount !== bombCountInCell) {
+      return;
+    }
+
+    const newUserInputs = structuredClone(userInputs);
+    let GameOver = false;
+
+    // 周囲のセルを一つずつ開く
+    for (const [dx, dy] of directions) {
+      const nx = x + dx;
+      const ny = y + dy;
+
+      if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+        // 旗がなく、まだ開かれていないセルが対象
+        if (newUserInputs[ny][nx] === 0) {
+          if (bombMap[ny][nx] === 10) {
+            // 爆弾を踏んでしまった場合
+            newUserInputs[ny][nx] = -2; // 踏んだ爆弾としてマーク
+            GameOver = true;
+          } else {
+            // 安全なセルなら再帰的に開く
+            openRecursive(nx, ny, bombMap, newUserInputs);
+          }
+        }
+      }
+    }
+    setUserInputs(newUserInputs);
+
+    if (GameOver) {
+      setGameState('lost');
+      setTimerRunning(false);
+      alert('GAME OVER!');
+    }
+  };
+
   const leftclick = (x: number, y: number) => {
-    if (gameState !== 'playing' || userInputs[y][x] !== 0) {
+    if (gameState !== 'playing') {
+      return;
+    }
+    if (userInputs[y][x] === -1) {
+      handleChordClick(x, y);
+      return;
+    }
+    if (userInputs[y][x] !== 0) {
       return;
     }
 
     let currentBombMap = bombMap;
-    console.log(x, y);
 
     const firstClick = bombMap.flat().every((value) => value === 0);
     // 一回目の左クリックで爆弾配置
